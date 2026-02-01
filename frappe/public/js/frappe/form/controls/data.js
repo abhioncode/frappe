@@ -111,6 +111,9 @@ frappe.ui.form.ControlData = class ControlData extends frappe.ui.form.ControlInp
 		if (this.df.options == "Barcode") {
 			this.setup_barcode_field();
 		}
+		if (this.df.options == "IBAN") {
+			this.setup_iban_field();
+		}
 	}
 
 	setup_url_field() {
@@ -153,6 +156,12 @@ frappe.ui.form.ControlData = class ControlData extends frappe.ui.form.ControlInp
 			setTimeout(() => {
 				this.$link.toggle(false);
 			}, 500);
+		});
+	}
+
+	setup_iban_field() {
+		this.$input.on("blur", () => {
+			this.set_formatted_input(this.get_input_value());
 		});
 	}
 
@@ -280,6 +289,13 @@ frappe.ui.form.ControlData = class ControlData extends frappe.ui.form.ControlInp
 		if (this.df.input_class) {
 			this.$input.addClass(this.df.input_class);
 		}
+		// Apply alignment for supported field types
+		if (
+			this.df.alignment &&
+			["Data", "Int", "Float", "Currency", "Percent"].includes(this.df.fieldtype)
+		) {
+			this.$input.css("text-align", this.df.alignment.toLowerCase());
+		}
 	}
 	set_input(value) {
 		this.last_value = this.value;
@@ -295,7 +311,16 @@ frappe.ui.form.ControlData = class ControlData extends frappe.ui.form.ControlInp
 		return this.$input ? this.$input.val() : undefined;
 	}
 	format_for_input(val) {
+		if (this.df.options == "IBAN" && val) {
+			return frappe.utils.get_formatted_iban(val);
+		}
 		return val == null ? "" : val;
+	}
+	parse(value) {
+		if (this.df.options == "IBAN" && value) {
+			return value.replaceAll(" ", "");
+		}
+		return value;
 	}
 	validate(v) {
 		if (!v) {
